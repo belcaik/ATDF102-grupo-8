@@ -1,3 +1,10 @@
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+MAGENTA = "\033[95m"
+CYAN = "\033[96m"
+RESET = "\033[0m"  # Reset to default color
 def show_main_menu():
     print("Menú Principal")
     print("1. Mantenedores")
@@ -68,6 +75,9 @@ def main():
                     region_maintainer()
                 elif sub_choice == "12":
                     break
+                print("="*25)
+                print("seleccione opcion valida\n")
+                print("="*25)
         elif choice == "2":
             while True:
                 show_reports_menu()
