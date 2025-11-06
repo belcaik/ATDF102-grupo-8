@@ -1,41 +1,45 @@
-from modules.region import create_region, read_regions, update_region, delete_region
 
-def list_regions():
+
+def list_regions(regions):
     """Prints a list of all regions."""
-    regions = read_regions()
     if not regions:
         print("No hay regiones registradas.")
         return
     for region in regions:
         print(f"ID: {region.id}, Nombre: {region.name}")
 
-def add_region():
+def add_region(regions):
     """Prompts the user for region information and creates a new region."""
     name = input("Ingrese nombre de la región: ")
-    new_region = create_region(name)
-    print(f"Región '{new_region.name}' creada con éxito.")
+    new_region_id = max([r.id for r in regions]) + 1
+    new_region = {"id": new_region_id, "name": name}
+    regions.append(new_region)
+    print(f"Región '{new_region['name']}' creada con éxito.")
 
-def edit_region():
+def edit_region(regions):
     """Prompts the user for a region ID and new information to update a region."""
-    list_regions()
+    list_regions(regions)
     region_id = int(input("Ingrese el ID de la región a editar: "))
     name = input("Ingrese nuevo nombre: ")
-    updated_region = update_region(region_id, name)
-    if updated_region:
-        print(f"Región '{updated_region.name}' actualizada con éxito.")
-    else:
-        print("Región no encontrada.")
+    for region in regions:
+        if region.id == region_id:
+            region.name = name
+            print(f"Región '{region.name}' actualizada con éxito.")
+            return
+    print("Región no encontrada.")
 
-def remove_region():
+def remove_region(regions):
     """Prompts the user for a region ID to delete a region."""
-    list_regions()
+    list_regions(regions)
     region_id = int(input("Ingrese el ID de la región a eliminar: "))
-    if delete_region(region_id):
+    initial_len = len(regions)
+    regions[:] = [region for region in regions if region.id != region_id]
+    if len(regions) < initial_len:
         print("Región eliminada con éxito.")
     else:
         print("Región no encontrada.")
 
-def region_maintainer():
+def region_maintainer(data):
     """Shows the region maintainer menu and handles user input."""
     while True:
         print("\n--- Mantenedor de Regiones ---")
@@ -47,13 +51,13 @@ def region_maintainer():
         choice = input("Seleccione una opción: ")
 
         if choice == "1":
-            list_regions()
+            list_regions(data["regions"])
         elif choice == "2":
-            add_region()
+            add_region(data["regions"])
         elif choice == "3":
-            edit_region()
+            edit_region(data["regions"])
         elif choice == "4":
-            remove_region()
+            remove_region(data["regions"])
         elif choice == "5":
             break
         else:

@@ -1,43 +1,48 @@
-from modules.commune import create_commune, read_communes, update_commune, delete_commune
 
-def list_communes():
+
+def list_communes(communes):
     """Prints a list of all communes."""
-    communes = read_communes()
     if not communes:
         print("No hay comunas registradas.")
         return
     for commune in communes:
         print(f"ID: {commune.id}, Nombre: {commune.name}, ID Región: {commune.region_id}")
 
-def add_commune():
+def add_commune(communes):
     """Prompts the user for commune information and creates a new commune."""
     name = input("Ingrese nombre de la comuna: ")
     region_id = int(input("Ingrese ID de la región: "))
-    new_commune = create_commune(name, region_id)
-    print(f"Comuna '{new_commune.name}' creada con éxito.")
+    new_commune_id = max([c.id for c in communes]) + 1
+    new_commune = {"id": new_commune_id, "name": name, "region_id": region_id}
+    communes.append(new_commune)
+    print(f"Comuna '{new_commune['name']}' creada con éxito.")
 
-def edit_commune():
+def edit_commune(communes):
     """Prompts the user for a commune ID and new information to update a commune."""
-    list_communes()
+    list_communes(communes)
     commune_id = int(input("Ingrese el ID de la comuna a editar: "))
     name = input("Ingrese nuevo nombre: ")
     region_id = int(input("Ingrese nuevo ID de la región: "))
-    updated_commune = update_commune(commune_id, name, region_id)
-    if updated_commune:
-        print(f"Comuna '{updated_commune.name}' actualizada con éxito.")
-    else:
-        print("Comuna no encontrada.")
+    for commune in communes:
+        if commune.id == commune_id:
+            commune.name = name
+            commune.region_id = region_id
+            print(f"Comuna '{commune.name}' actualizada con éxito.")
+            return
+    print("Comuna no encontrada.")
 
-def remove_commune():
+def remove_commune(communes):
     """Prompts the user for a commune ID to delete a commune."""
-    list_communes()
+    list_communes(communes)
     commune_id = int(input("Ingrese el ID de la comuna a eliminar: "))
-    if delete_commune(commune_id):
+    initial_len = len(communes)
+    communes[:] = [commune for commune in communes if commune.id != commune_id]
+    if len(communes) < initial_len:
         print("Comuna eliminada con éxito.")
     else:
         print("Comuna no encontrada.")
 
-def commune_maintainer():
+def commune_maintainer(data):
     """Shows the commune maintainer menu and handles user input."""
     while True:
         print("\n--- Mantenedor de Comunas ---")
@@ -49,13 +54,13 @@ def commune_maintainer():
         choice = input("Seleccione una opción: ")
 
         if choice == "1":
-            list_communes()
+            list_communes(data["communes"])
         elif choice == "2":
-            add_commune()
+            add_commune(data["communes"])
         elif choice == "3":
-            edit_commune()
+            edit_commune(data["communes"])
         elif choice == "4":
-            remove_commune()
+            remove_commune(data["communes"])
         elif choice == "5":
             break
         else:

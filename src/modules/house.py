@@ -10,14 +10,15 @@ class House:
     number: str
     type_id: int
     condo_id: int
+    client_id: int
 
 houses: List[House] = []
 next_house_id = 1
 
-def create_house(street: str, number: str, type_id: int, condo_id: int) -> House:
+def create_house(street: str, number: str, type_id: int, condo_id: int, client_id: int) -> House:
     """Creates a new house and adds it to the in-memory list."""
     global next_house_id
-    new_house = House(id=next_house_id, street=street, number=number, type_id=type_id, condo_id=condo_id)
+    new_house = House(id=next_house_id, street=street, number=number, type_id=type_id, condo_id=condo_id, client_id=client_id)
     houses.append(new_house)
     next_house_id += 1
     return new_house
@@ -26,7 +27,7 @@ def read_houses() -> List[House]:
     """Returns the list of all houses."""
     return houses
 
-def update_house(house_id: int, street: str, number: str, type_id: int, condo_id: int) -> House | None:
+def update_house(house_id: int, street: str, number: str, type_id: int, condo_id: int, client_id: int) -> House | None:
     """Updates a house's information."""
     for house in houses:
         if house.id == house_id:
@@ -34,6 +35,7 @@ def update_house(house_id: int, street: str, number: str, type_id: int, condo_id
             house.number = number
             house.type_id = type_id
             house.condo_id = condo_id
+            house.client_id = client_id
             return house
     return None
 
