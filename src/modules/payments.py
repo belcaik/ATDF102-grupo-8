@@ -1,10 +1,13 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
+import sqlite3
+
+from src.database import get_db_connection
+
 
 @dataclass
 class Payments:
     """Stores billing information for a specific property and client."""
-
     id: int
     id_client: int
     id_house: int
@@ -14,38 +17,126 @@ class Payments:
     amount: float
     description: str
 
-payments: List[Payments] = []
-next_payment_id = 1
+def create_payment(id_client: int, id_house: int, payment_year_id: int,
+                   payment_month_id: int, payment_type: int, amount: float,
+                   description: str) -> Payments:
+    """Creates a new payment in the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-def create_payment(id_client: int, id_house: int, payment_year_id: int, payment_month_id: int, payment_type: int, amount: float, description: str) -> Payments:
-    """Creates a new payment and adds it to the in-memory list."""
-    global next_payment_id
-    new_payment = Payments(id=next_payment_id, id_client=id_client, id_house=id_house, payment_year_id=payment_year_id, payment_month_id=payment_month_id, payment_type=payment_type, amount=amount, description=description)
-    payments.append(new_payment)
-    next_payment_id += 1
-    return new_payment
+    try:
+        sql = '''
+              INSERT INTO payments
+              (id_client, id_house, payment_year_id, payment_month_id, payment_type, amount, description)
+              VALUES (?, ?, ?, ?, ?, ?, ?) \
+              '''
+        values = (id_client, id_house, payment_year_id, payment_month_id, payment_type, amount, description)
+
+        cursor.execute(sql, values)
+        conn.commit()
+
+        new_id = cursor.lastrowid
+        return Payments(
+            id=new_id,
+            id_client=id_client,
+            id_house=id_house,
+            payment_year_id=payment_year_id,
+            payment_month_id=payment_month_id,
+            payment_type=payment_type,
+            amount=amount,
+            description=description
+        )
+
+    except sqlite3.Error as e:
+        print(f"Error registrando pago: {e}")
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
 
 def read_payments() -> List[Payments]:
-    """Returns the list of all payments."""
-    return payments
+    """Returns the list of all payments from the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-def update_payment(payment_id: int, id_client: int, id_house: int, payment_year_id: int, payment_month_id: int, payment_type: int, amount: float, description: str) -> Payments | None:
-    """Updates a payment's information."""
-    for payment in payments:
-        if payment.id == payment_id:
-            payment.id_client = id_client
-            payment.id_house = id_house
-            payment.payment_year_id = payment_year_id
-            payment.payment_month_id = payment_month_id
-            payment.payment_type = payment_type
-            payment.amount = amount
-            payment.description = description
-            return payment
-    return None
+    cursor.execute("SELECT * FROM payments ORDER BY id DESC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    payments_list = []
+    for row in rows:
+        obj = Payments(
+            id=row['id'],
+            id_client=row['id_client'],
+            id_house=row['id_house'],
+            payment_year_id=row['payment_year_id'],
+            payment_month_id=row['payment_month_id'],
+            payment_type=row['payment_type'],
+            amount=row['amount'],
+            description=row['description']
+        )
+        payments_list.append(obj)
+
+    return payments_list
+
+def update_payment(payment_id: int, id_client: int, id_house: int, payment_year_id: int,
+                   payment_month_id: int, payment_type: int, amount: float,
+                   description: str) -> Optional[Payments]:
+    """Updates a payment's information in the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        sql = '''
+              UPDATE payments
+              SET id_client=?, \
+                  id_house=?, \
+                  payment_year_id=?, \
+                  payment_month_id=?,
+                  payment_type=?, \
+                  amount=?, \
+                  description=?
+              WHERE id = ? \
+              '''
+        values = (id_client, id_house, payment_year_id, payment_month_id, payment_type, amount, description, payment_id)
+
+        cursor.execute(sql, values)
+        conn.commit()
+
+        if cursor.rowcount > 0:
+            return Payments(
+                id=payment_id,
+                id_client=id_client,
+                id_house=id_house,
+                payment_year_id=payment_year_id,
+                payment_month_id=payment_month_id,
+                payment_type=payment_type,
+                amount=amount,
+                description=description
+            )
+        else:
+            return None
+
+    except sqlite3.Error as e:
+        print(f"Error actualizando pago: {e}")
+        return None
+    finally:
+        conn.close()
+
 
 def delete_payment(payment_id: int) -> bool:
-    """Deletes a payment from the in-memory list."""
-    global payments
-    initial_len = len(payments)
-    payments = [payment for payment in payments if payment.id != payment_id]
-    return len(payments) < initial_len
+    """Deletes a payment from the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("DELETE FROM payments WHERE id = ?", (payment_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+
+    except sqlite3.Error as e:
+        print(f"Error eliminando pago: {e}")
+        return False
+    finally:
+        conn.close()

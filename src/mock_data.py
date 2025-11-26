@@ -11,6 +11,8 @@ from modules.payment_month import PaymentMonth
 from modules.payment_year import PaymentYear
 import random
 
+#Se puede eliminar este archivo
+
 def generate_rut():
     rut_num = random.randint(5000000, 25000000)
     verif_digit = random.randint(0, 9)

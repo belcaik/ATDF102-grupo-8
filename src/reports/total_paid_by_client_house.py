@@ -1,14 +1,50 @@
+import sqlite3
+from src.database import get_db_connection
 
-def total_paid_by_client_house(data):
-    # Individual
-    print("\nMonto total pagado por clientes con casa (individual):")
-    for client in data["clients"]:
-        total = sum(p.amount for p in data["payments"] 
-                    if data["houses"][p.id_house - 1].client_id == client.id and \
-                       data["houses"][p.id_house - 1].type_id == 1) # HouseType 'Casa' 
-        if total > 0:
-            print(f"  - {client.full_name}: ${total}")
+def total_paid_by_client_house():
+    print("\n--- Reporte: Pagos de Clientes (Solo Casas) ---")
 
-    # Global
-    global_total = sum(p.amount for p in data["payments"] if data["houses"][p.id_house - 1].type_id == 1)
-    print(f"\nMonto total pagado por clientes con casa (global): ${global_total}")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        HOUSE_TYPE_ID = 1
+
+        query_global = '''
+                       SELECT SUM(p.amount)
+                       FROM payments p
+                                JOIN houses h ON p.id_house = h.id
+                       WHERE h.type_id = ? \
+                       '''
+        cursor.execute(query_global, (HOUSE_TYPE_ID,))
+        result = cursor.fetchone()[0]
+        global_total = result if result else 0
+
+        query_individual = '''
+                           SELECT c.full_name, SUM(p.amount) as total
+                           FROM clients c
+                                    JOIN houses h ON c.id = h.client_id
+                                    JOIN payments p ON h.id = p.id_house
+                           WHERE h.type_id = ?
+                           GROUP BY c.id, c.full_name
+                           HAVING total > 0
+                           ORDER BY total DESC \
+                           '''
+
+        cursor.execute(query_individual, (HOUSE_TYPE_ID,))
+        rows = cursor.fetchall()
+
+        print("\n[Detalle Individual]")
+        if not rows:
+            print("  No hay pagos registrados para casas.")
+
+        for row in rows:
+            print(f"  - {row['full_name']}: ${int(row['total'])}")
+
+        print(f"\n[Resumen]")
+        print(f"Monto total recaudado (Global Casas): ${int(global_total)}")
+
+    except Exception as e:
+        print(f"Error en el reporte: {e}")
+    finally:
+        conn.close()

@@ -1,23 +1,47 @@
+import sqlite3
+from src.database import get_db_connection
 
-def total_collected_by_condo_month_year(data):
-    month_id = int(input("Ingrese el ID del mes: "))
-    year_id = int(input("Ingrese el ID del año: "))
 
-    print(f"\nMonto total recaudado por condominio para el mes {month_id} del año {year_id}:")
-    for condo in data["condos"]:
-        total_casa = sum(p.amount for p in data["payments"] 
-                         if data["houses"][p.id_house - 1].condo_id == condo.id and \
-                            p.payment_month_id == month_id and \
-                            p.payment_year_id == year_id and \
-                            data["houses"][p.id_house - 1].type_id == 1) # Casa
-        
-        total_depto = sum(p.amount for p in data["payments"] 
-                          if data["houses"][p.id_house - 1].condo_id == condo.id and \
-                             p.payment_month_id == month_id and \
-                             p.payment_year_id == year_id and \
-                             data["houses"][p.id_house - 1].type_id == 2) # Departamento
+def total_collected_by_condo_month_year():
+    print("\n--- Reporte: Recaudación por Condominio (Casa vs Depto) ---")
 
-        print(f"  - {condo.name}:")
-        print(f"    - Casas: ${total_casa}")
-        print(f"    - Departamentos: ${total_depto}")
+    try:
+        month_id = int(input("Ingrese el ID del mes: "))
+        year_id = int(input("Ingrese el ID del año: "))
+    except ValueError:
+        print("Error: Debe ingresar números válidos.")
+        return
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        query = '''
+                SELECT c.name, \
+                       SUM(CASE WHEN h.type_id = 1 THEN p.amount ELSE 0 END) as total_casa, \
+                       SUM(CASE WHEN h.type_id = 2 THEN p.amount ELSE 0 END) as total_depto
+                FROM condos c
+                         LEFT JOIN houses h ON c.id = h.condo_id
+                         LEFT JOIN payments p ON h.id = p.id_house
+                    AND p.payment_month_id = ?
+                    AND p.payment_year_id = ?
+                GROUP BY c.id, c.name \
+                '''
+
+        cursor.execute(query, (month_id, year_id))
+        rows = cursor.fetchall()
+
+        print(f"\nResumen para el Mes {month_id}/{year_id}:")
+
+        if not rows:
+            print("No se encontraron registros.")
+
+        for row in rows:
+            print(f"  - {row['name']}:")
+            print(f"    - Casas:         ${int(row['total_casa'])}")
+            print(f"    - Departamentos: ${int(row['total_depto'])}")
+
+    except Exception as e:
+        print(f"Error en el reporte: {e}")
+    finally:
+        conn.close()
