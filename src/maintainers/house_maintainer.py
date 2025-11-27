@@ -48,12 +48,15 @@ def add_house():
         type_id = int(input("Ingrese ID del tipo de casa: "))
         condo_id = int(input("Ingrese ID del condominio: "))
         client_id = int(input("Ingrese ID del cliente dueño: "))
-
-        new_house = create_house(street, number, type_id, condo_id, client_id)
-        print(f"Casa en '{new_house.street} {new_house.number}' creada con éxito (ID: {new_house.id}).")
-
     except ValueError:
         print("Error: Los IDs deben ser números.")
+        return
+
+    try:
+        new_house = create_house(street, number, type_id, condo_id, client_id)
+        print(f"Casa en '{new_house.street} {new_house.number}' creada con éxito (ID: {new_house.id}).")
+    except ValueError as e:
+        print(f"Error al crear casa: {e}")
     except Exception as e:
         print(f"Error al crear casa: {e}")
 
@@ -72,7 +75,11 @@ def edit_house():
         type_id = int(input("Ingrese nuevo ID del tipo de casa: "))
         condo_id = int(input("Ingrese nuevo ID del condominio: "))
         client_id = int(input("Ingrese nuevo ID del cliente: "))
+    except ValueError:
+        print("Error: Los IDs deben ser números.")
+        return
 
+    try:
         updated = update_house(house_id, street, number, type_id, condo_id, client_id)
 
         if updated:
@@ -80,8 +87,8 @@ def edit_house():
         else:
             print("Casa no encontrada.")
 
-    except ValueError:
-        print("Error: Los IDs deben ser números.")
+    except ValueError as e:
+        print(f"Error al actualizar casa: {e}")
 
 
 def remove_house():

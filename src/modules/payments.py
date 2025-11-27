@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
 
-from shared.database.db import get_db_connection
+from shared.database.db import ensure_fk_exists, get_db_connection
 
 
 @dataclass
@@ -25,6 +25,11 @@ def create_payment(id_client: int, id_house: int, payment_year_id: int,
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "clients", id_client)
+        ensure_fk_exists(cursor, "houses", id_house)
+        ensure_fk_exists(cursor, "payment_years", payment_year_id)
+        ensure_fk_exists(cursor, "payment_months", payment_month_id)
+        ensure_fk_exists(cursor, "payment_types", payment_type)
         sql = '''
               INSERT INTO payments
               (id_client, id_house, payment_year_id, payment_month_id, payment_type, amount, description)
@@ -88,6 +93,11 @@ def update_payment(payment_id: int, id_client: int, id_house: int, payment_year_
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "clients", id_client)
+        ensure_fk_exists(cursor, "houses", id_house)
+        ensure_fk_exists(cursor, "payment_years", payment_year_id)
+        ensure_fk_exists(cursor, "payment_months", payment_month_id)
+        ensure_fk_exists(cursor, "payment_types", payment_type)
         sql = '''
               UPDATE payments
               SET id_client=?, \

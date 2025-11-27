@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
 
-from shared.database.db import get_db_connection
+from shared.database.db import ensure_fk_exists, get_db_connection
 
 
 @dataclass
@@ -21,6 +21,9 @@ def create_house(street: str, number: str, type_id: int, condo_id: int, client_i
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "house_types", type_id)
+        ensure_fk_exists(cursor, "condos", condo_id)
+        ensure_fk_exists(cursor, "clients", client_id)
         cursor.execute('''
                        INSERT INTO houses (street, number, type_id, condo_id, client_id)
                        VALUES (?, ?, ?, ?, ?)
@@ -70,6 +73,9 @@ def update_house(house_id: int, street: str, number: str, type_id: int, condo_id
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "house_types", type_id)
+        ensure_fk_exists(cursor, "condos", condo_id)
+        ensure_fk_exists(cursor, "clients", client_id)
         cursor.execute('''
                        UPDATE houses
                        SET street    = ?,

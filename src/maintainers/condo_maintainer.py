@@ -39,13 +39,17 @@ def add_condo():
 
     try:
         commune_id = int(input("Ingrese ID de la comuna: "))
+    except ValueError:
+        print("Error: El ID de la comuna debe ser un número.")
+        return
 
+    try:
         # Guardamos en DB
         new_condo = create_condo(street, number, name, commune_id)
         print(f"Condominio '{new_condo.name}' creado con éxito (ID: {new_condo.id}).")
 
-    except ValueError:
-        print("Error: El ID de la comuna debe ser un número.")
+    except ValueError as e:
+        print(f"Error al crear condominio: {e}")
     except Exception as e:
         print(f"Error al crear condominio: {e}")
 
@@ -62,7 +66,11 @@ def edit_condo():
 
         print_communes_helper()
         commune_id = int(input("Ingrese nuevo ID de la comuna: "))
+    except ValueError:
+        print("Error: Los IDs deben ser números.")
+        return
 
+    try:
         updated = update_condo(condo_id, street, number, name, commune_id)
 
         if updated:
@@ -70,8 +78,8 @@ def edit_condo():
         else:
             print("Condominio no encontrado.")
 
-    except ValueError:
-        print("Error: Los IDs deben ser números.")
+    except ValueError as e:
+        print(f"Error al actualizar condominio: {e}")
 
 
 def remove_condo():

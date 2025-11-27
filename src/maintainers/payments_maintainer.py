@@ -63,13 +63,16 @@ def add_payment():
 
         amount = float(input("Ingrese monto ($): "))
         description = input("Ingrese descripción (ej: Gasto común): ")
+    except ValueError:
+        print("Error: Los IDs y montos deben ser números.")
+        return
 
+    try:
         new_pay = create_payment(id_client, id_house, payment_year_id, payment_month_id, payment_type, amount,
                                  description)
         print(f"Pago de ${new_pay.amount} registrado con éxito (ID Pago: {new_pay.id}).")
-
-    except ValueError:
-        print("Error: Los IDs y montos deben ser números.")
+    except ValueError as e:
+        print(f"Error al registrar pago: {e}")
     except Exception as e:
         print(f"Error al registrar pago: {e}")
 
@@ -90,7 +93,11 @@ def edit_payment():
         payment_type = int(input("Nuevo ID Tipo Pago: "))
         amount = float(input("Nuevo Monto: "))
         description = input("Nueva Descripción: ")
+    except ValueError:
+        print("Error: Los valores numéricos son inválidos.")
+        return
 
+    try:
         updated = update_payment(payment_id, id_client, id_house, payment_year_id, payment_month_id, payment_type,
                                  amount, description)
 
@@ -99,8 +106,8 @@ def edit_payment():
         else:
             print("Pago no encontrado.")
 
-    except ValueError:
-        print("Error: Los valores numéricos son inválidos.")
+    except ValueError as e:
+        print(f"Error al actualizar pago: {e}")
 
 
 def remove_payment():
