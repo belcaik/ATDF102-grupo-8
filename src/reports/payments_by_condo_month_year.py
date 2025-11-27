@@ -1,11 +1,18 @@
 import sqlite3
 from typing import List
+import time
 
 from shared.database.db import get_db_connection
+from shared.logger import get_logger
+
+logger = get_logger("reports.payments_by_condo")
 
 
 def get_payments_by_condo_month_year(condo_id: int, month_id: int, year_id: int) -> List[sqlite3.Row]:
     """Returns payments for a condo filtered by month and year."""
+    logger.info("Generando reporte de pagos por condominio", condo_id=condo_id, month_id=month_id, year_id=year_id)
+    start_time = time.time()
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -22,6 +29,11 @@ def get_payments_by_condo_month_year(condo_id: int, month_id: int, year_id: int)
     cursor.execute(query, (condo_id, month_id, year_id))
     payments = cursor.fetchall()
     conn.close()
+
+    duration_ms = int((time.time() - start_time) * 1000)
+    logger.info("Reporte de pagos generado", condo_id=condo_id, month_id=month_id, year_id=year_id,
+                payments_count=len(payments), duration_ms=duration_ms)
+
     return payments
 
 
