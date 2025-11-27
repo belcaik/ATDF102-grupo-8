@@ -1,5 +1,5 @@
 import sqlite3
-from src.database import get_db_connection
+from shared.database.db import get_db_connection
 
 from src.modules.condo import read_condos
 from src.modules.payment_month import read_payment_months

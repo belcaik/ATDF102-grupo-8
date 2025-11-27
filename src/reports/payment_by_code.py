@@ -1,5 +1,5 @@
 import sqlite3
-from src.database import get_db_connection
+from shared.database.db import get_db_connection
 
 def query_payment_by_code():
     print("\n--- Consultar Pago por Código ---")

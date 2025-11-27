@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
 
-from src.database import get_db_connection
+from shared.database.db import get_db_connection
 
 @dataclass
 class Commune:

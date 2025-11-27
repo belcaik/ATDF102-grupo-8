@@ -1,5 +1,5 @@
 import sqlite3
-from src.database import get_db_connection
+from shared.database.db import get_db_connection
 
 
 def total_collected_by_condo():
