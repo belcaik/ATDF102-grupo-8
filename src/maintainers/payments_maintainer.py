@@ -5,6 +5,9 @@ from src.modules.house import read_houses
 from src.modules.payment_year import read_payment_years
 from src.modules.payment_month import read_payment_months
 from src.modules.payment_type import read_payment_types
+from shared.logger import get_logger
+
+logger = get_logger("maintainers.payments")
 
 
 def list_payments():
@@ -47,6 +50,7 @@ def print_dependencies():
 
 def add_payment():
     """Prompts for info and creates a new payment in DB."""
+    logger.info("Iniciando registro de nuevo pago")
     print("\n--- Registrar Nuevo Pago ---")
 
     print_dependencies()
@@ -63,14 +67,22 @@ def add_payment():
 
         amount = float(input("Ingrese monto ($): "))
         description = input("Ingrese descripción (ej: Gasto común): ")
+    except ValueError:
+        logger.warn("Entrada inválida en registro de pago")
+        print("Error: Los IDs y montos deben ser números.")
+        return
 
+    try:
+        logger.debug("Creando pago", client_id=id_client, house_id=id_house, amount=amount)
         new_pay = create_payment(id_client, id_house, payment_year_id, payment_month_id, payment_type, amount,
                                  description)
+        logger.info("Pago registrado exitosamente", payment_id=new_pay.id, amount=new_pay.amount, client_id=id_client)
         print(f"Pago de ${new_pay.amount} registrado con éxito (ID Pago: {new_pay.id}).")
-
-    except ValueError:
-        print("Error: Los IDs y montos deben ser números.")
+    except ValueError as e:
+        logger.error("Error de validación al registrar pago", error=str(e), client_id=id_client, house_id=id_house)
+        print(f"Error al registrar pago: {e}")
     except Exception as e:
+        logger.error("Error inesperado al registrar pago", error=str(e), exc_info=True)
         print(f"Error al registrar pago: {e}")
 
 
@@ -90,7 +102,11 @@ def edit_payment():
         payment_type = int(input("Nuevo ID Tipo Pago: "))
         amount = float(input("Nuevo Monto: "))
         description = input("Nueva Descripción: ")
+    except ValueError:
+        print("Error: Los valores numéricos son inválidos.")
+        return
 
+    try:
         updated = update_payment(payment_id, id_client, id_house, payment_year_id, payment_month_id, payment_type,
                                  amount, description)
 
@@ -99,8 +115,8 @@ def edit_payment():
         else:
             print("Pago no encontrado.")
 
-    except ValueError:
-        print("Error: Los valores numéricos son inválidos.")
+    except ValueError as e:
+        print(f"Error al actualizar pago: {e}")
 
 
 def remove_payment():
@@ -109,12 +125,16 @@ def remove_payment():
     try:
         payment_id = int(input("\nIngrese el ID del pago a eliminar: "))
 
+        logger.info("Intentando eliminar pago", payment_id=payment_id)
         if delete_payment(payment_id):
+            logger.info("Pago eliminado exitosamente", payment_id=payment_id)
             print("Pago eliminado con éxito.")
         else:
+            logger.warn("Intento de eliminar pago inexistente", payment_id=payment_id)
             print("Pago no encontrado.")
 
     except ValueError:
+        logger.warn("ID inválido al intentar eliminar pago")
         print("Error: El ID debe ser un número.")
 
 

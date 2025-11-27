@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
 
-from src.database import get_db_connection
+from shared.database.db import ensure_fk_exists, get_db_connection
 
 
 @dataclass
@@ -21,6 +21,9 @@ def create_house(street: str, number: str, type_id: int, condo_id: int, client_i
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "house_types", type_id)
+        ensure_fk_exists(cursor, "condos", condo_id)
+        ensure_fk_exists(cursor, "clients", client_id)
         cursor.execute('''
                        INSERT INTO houses (street, number, type_id, condo_id, client_id)
                        VALUES (?, ?, ?, ?, ?)
@@ -70,6 +73,9 @@ def update_house(house_id: int, street: str, number: str, type_id: int, condo_id
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "house_types", type_id)
+        ensure_fk_exists(cursor, "condos", condo_id)
+        ensure_fk_exists(cursor, "clients", client_id)
         cursor.execute('''
                        UPDATE houses
                        SET street    = ?,
@@ -105,6 +111,9 @@ def delete_house(house_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar la propiedad porque tiene pagos asociados.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando propiedad: {e}")
         return False

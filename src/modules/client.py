@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
-from src.database import get_db_connection
+from shared.database.db import get_db_connection
 
 
 
@@ -103,6 +103,9 @@ def delete_client(client_id: int) -> bool:
         deleted = cursor.rowcount > 0
         return deleted
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar el cliente porque tiene propiedades o pagos asociados.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando cliente: {e}")
         return False

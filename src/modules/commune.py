@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
 
-from src.database import get_db_connection
+from shared.database.db import ensure_fk_exists, get_db_connection
 
 @dataclass
 class Commune:
@@ -17,6 +17,7 @@ def create_commune(name: str, region_id: int) -> Commune:
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "regions", region_id)
         cursor.execute("INSERT INTO communes (name, region_id) VALUES (?, ?)", (name, region_id))
         conn.commit()
 
@@ -57,6 +58,7 @@ def update_commune(commune_id: int, name: str, region_id: int) -> Optional[Commu
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "regions", region_id)
         cursor.execute('''
                        UPDATE communes
                        SET name      = ?,
@@ -88,6 +90,9 @@ def delete_commune(commune_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar la comuna porque tiene condominios asociados.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando comuna: {e}")
         return False

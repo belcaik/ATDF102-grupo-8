@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 import sqlite3
 
-from src.database import get_db_connection
+from shared.database.db import ensure_fk_exists, get_db_connection
 
 
 @dataclass
@@ -20,6 +20,7 @@ def create_condo(street: str, number: str, name: str, commune_id: int) -> Condo:
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "communes", commune_id)
         cursor.execute('''
                        INSERT INTO condos (street, number, name, commune_id)
                        VALUES (?, ?, ?, ?)
@@ -67,6 +68,7 @@ def update_condo(condo_id: int, street: str, number: str, name: str, commune_id:
     cursor = conn.cursor()
 
     try:
+        ensure_fk_exists(cursor, "communes", commune_id)
         cursor.execute('''
                        UPDATE condos
                        SET street     = ?,
@@ -100,6 +102,9 @@ def delete_condo(condo_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar el condominio porque tiene propiedades asociadas.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando condominio: {e}")
         return False

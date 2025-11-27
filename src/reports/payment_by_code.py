@@ -1,7 +1,21 @@
 import sqlite3
-from src.database import get_db_connection
+from typing import Optional
+
+from shared.database.db import get_db_connection
+
+
+def get_payment_by_id(payment_id: int) -> Optional[sqlite3.Row]:
+    """Returns a payment row by ID or None if it does not exist."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM payments WHERE id = ?", (payment_id,))
+    payment = cursor.fetchone()
+    conn.close()
+    return payment
+
 
 def query_payment_by_code():
+    """CLI wrapper that asks for an ID and prints the payment info."""
     print("\n--- Consultar Pago por Código ---")
 
     try:
@@ -10,14 +24,7 @@ def query_payment_by_code():
         print("Error: El ID debe ser un número.")
         return
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM payments WHERE id = ?", (code,))
-
-    payment = cursor.fetchone()
-
-    conn.close()
+    payment = get_payment_by_id(code)
 
     if payment:
         print("\nPago encontrado:")

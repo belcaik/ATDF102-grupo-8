@@ -33,12 +33,15 @@ def add_commune():
     name = input("Ingrese nombre de la comuna: ")
     try:
         region_id = int(input("Ingrese ID de la región: "))
-
-        new_commune = create_commune(name, region_id)
-        print(f"Comuna '{new_commune.name}' creada con éxito (ID: {new_commune.id}).")
-
     except ValueError:
         print("Error: El ID de región debe ser un número.")
+        return
+
+    try:
+        new_commune = create_commune(name, region_id)
+        print(f"Comuna '{new_commune.name}' creada con éxito (ID: {new_commune.id}).")
+    except ValueError as e:
+        print(f"Error al crear comuna: {e}")
     except Exception as e:
         print(f"Error al crear comuna: {e}")
 
@@ -52,7 +55,11 @@ def edit_commune():
 
         name = input("Ingrese nuevo nombre: ")
         region_id = int(input("Ingrese nuevo ID de la región: "))
+    except ValueError:
+        print("Error: Los IDs deben ser números.")
+        return
 
+    try:
         updated = update_commune(commune_id, name, region_id)
 
         if updated:
@@ -60,8 +67,8 @@ def edit_commune():
         else:
             print("Comuna no encontrada.")
 
-    except ValueError:
-        print("Error: Los IDs deben ser números.")
+    except ValueError as e:
+        print(f"Error al actualizar comuna: {e}")
 
 
 def remove_commune():
