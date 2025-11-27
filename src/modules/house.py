@@ -111,6 +111,9 @@ def delete_house(house_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar la propiedad porque tiene pagos asociados.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando propiedad: {e}")
         return False

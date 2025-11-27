@@ -78,6 +78,9 @@ def delete_region(region_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar la región porque tiene comunas asociadas.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando región: {e}")
         return False

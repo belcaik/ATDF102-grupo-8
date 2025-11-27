@@ -90,6 +90,9 @@ def delete_commune(commune_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar la comuna porque tiene condominios asociados.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando comuna: {e}")
         return False

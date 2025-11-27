@@ -145,6 +145,9 @@ def delete_payment(payment_id: int) -> bool:
         conn.commit()
         return cursor.rowcount > 0
 
+    except sqlite3.IntegrityError:
+        print("Error: No se puede eliminar el pago debido a restricciones de integridad.")
+        return False
     except sqlite3.Error as e:
         print(f"Error eliminando pago: {e}")
         return False
